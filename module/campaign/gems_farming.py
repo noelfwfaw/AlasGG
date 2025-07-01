@@ -442,7 +442,7 @@ class GemsFarming(CampaignRun, FleetEquipment, Dock):
             logger.hr('TRIGGERED LV32 LIMIT')
             return True
 
-        if self.campaign.config.GEMS_EMOTION_TRIGGRED:
+        if self.campaign.config.GEMS_EMOTION_TRIGGERED:
 
             self._trigger_emotion = True
             logger.hr('TRIGGERED EMOTION LIMIT')
