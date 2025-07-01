@@ -110,3 +110,4 @@ if __name__ == '__main__':
     LogRes(config=config).ActionPoint = {'Total': 99999, 'Value': 99999}
     config.update()
     exit(0)
+

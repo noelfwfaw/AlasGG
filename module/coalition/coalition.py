@@ -46,6 +46,8 @@ class Coalition(CoalitionCombat, CampaignEvent):
             raise ScriptError
 
         pt = ocr.ocr(self.device.image)
+        LogRes(self.config).Pt = pt
+        self.config.update()
         return pt
 
     def triggered_stop_condition(self, oil_check=False, pt_check=False):
