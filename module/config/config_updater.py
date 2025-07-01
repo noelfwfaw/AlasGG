@@ -173,7 +173,9 @@ class ConfigGenerator:
         # Construct args
         data = {}
         # Add dashboard to args
-        dashboard_and_task = {**self.task, **self.dashboard}
+
+        dashboard_and_task = {**self.dashboard,**self.task}
+
         for path, groups in deep_iter(dashboard_and_task, depth=3):
             if 'tasks' not in path and 'Dashboard' not in path:
                 continue
