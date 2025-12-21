@@ -1216,93 +1216,107 @@ class GemsFarming(CampaignRun, Dock, FleetEquipment, GemsEquipmentHandler):
         else:
             self.campaign.config.set_record(Emotion_Fleet1Value=emotion)
 
-    def run(self, name, folder='campaign_main', mode='normal', total=0):
-        """
-        Args:
-            name (str): Name of .py file.
-            folder (str): Name of the file folder under campaign.
-            mode (str): `normal` or `hard`
-            total (int):
-        """
-        self.config.STOP_IF_REACH_LV32 = self.change_flagship
-        
-        # 自动判断困难模式
-        if mode != 'hard':
-            if name.startswith('D') and name[1:].isdigit():
-                mode = 'hard'
-                logger.info(f'根据地图名称 {name} 自动设置为困难模式')
-        
-        self.current_mode = mode
-        self.config.Campaign_Mode = mode
+def run(self, name, folder='campaign_main', mode='normal', total=0):
+    """
+    Args:
+        name (str): Name of .py file.
+        folder (str): Name of the file folder under campaign.
+        mode (str): `normal` or `hard`
+        total (int):
+    """
+    self.config.STOP_IF_REACH_LV32 = self.change_flagship
+    
+    # 记录传入的参数
+    logger.info(f'run() 传入参数: name={name}, folder={folder}, mode={mode}, total={total}')
+    
+    # 自动判断困难模式
+    original_mode = mode
+    if mode != 'hard':
+        # D1, D2, D3, D4 等通常是困难模式
+        if name.startswith('D') and name[1:].isdigit():
+            mode = 'hard'
+            logger.info(f'根据地图名称 {name} 自动设置为困难模式（原模式：{original_mode}）')
+        # 其他可能表示困难模式的命名
+        elif 'hard' in name.lower() or 'h' in name.lower():
+            mode = 'hard'
+            logger.info(f'根据地图名称 {name} 自动设置为困难模式（原模式：{original_mode}）')
+    
+    # 保存当前模式
+    self.current_mode = mode
+    self.config.Campaign_Mode = mode
+    logger.info(f'最终使用的模式：{mode}')
 
-        while 1:
-            self._trigger_lv32 = False
-            is_limit = self.config.StopCondition_RunCount
+    while 1:
+        self._trigger_lv32 = False
+        is_limit = self.config.StopCondition_RunCount
 
-            try:
-                super().run(name=name, folder=folder, total=total)
-            except CampaignEnd as e:
-                if e.args[0] in ['Emotion withdraw', 'Emotion control']:
-                    self._trigger_emotion = True
-                else:
-                    raise e
-
-            # End
-            if self._trigger_lv32 or self._trigger_emotion:
-                success = True
-                
-                if self.current_mode == 'hard':
-                    logger.info('使用困难模式换船逻辑（装备码版）')
-                    # 使用新的类，支持装备码
-                    ship_change = HardShipChangeWithEquipmentCode(
-                        config=self.config, 
-                        device=self.device, 
-                        campaign=self.campaign, 
-                        stage=self.stage
-                    )
-                    if self.change_flagship:
-                        success = ship_change.flagship_change()
-                    if self.change_vanguard:
-                        success = success and ship_change.vanguard_change()
-                    
-                    # 换船成功后重置情感值为高值
-                    if success:
-                        logger.info('换船成功，重置情感值')
-                        if self.config.Fleet_FleetOrder == 'fleet1_standby_fleet2_all':
-                            self.config.set_record(Emotion_Fleet1Value=150)
-                            self.config.set_record(Emotion_Fleet2Value=150)
-                        else:
-                            self.config.set_record(Emotion_Fleet1Value=150)
-                else:
-                    logger.info('使用普通模式换船逻辑')
-                    if self.change_flagship:
-                        success = self.flagship_change()
-                    if self.change_vanguard:
-                        success = success and self.vanguard_change()
-
-                if is_limit and self.config.StopCondition_RunCount <= 0:
-                    logger.hr('Triggered stop condition: Run count')
-                    self.config.StopCondition_RunCount = 0
-                    self.config.Scheduler_Enable = False
-                    break
-
-                self._trigger_lv32 = False
-                self._trigger_emotion = False
-                self.campaign.config.LV32_TRIGGERED = False
-                self.campaign.config.GEMS_EMOTION_TRIGGERED = False
-                
-                # 换船后延迟一下
-                self.device.sleep(1)
-
-                # Scheduler
-                if self.config.task_switched():
-                    self.campaign.ensure_auto_search_exit()
-                    self.config.task_stop()
-                elif not success:
-                    self.campaign.ensure_auto_search_exit()
-                    self.config.task_delay(minute=30)
-                    self.config.task_stop()
-
-                continue
+        try:
+            super().run(name=name, folder=folder, total=total)
+        except CampaignEnd as e:
+            if e.args[0] in ['Emotion withdraw', 'Emotion control']:
+                self._trigger_emotion = True
             else:
+                raise e
+
+        # End
+        if self._trigger_lv32 or self._trigger_emotion:
+            success = True
+            
+            # === 关键修改：根据最终模式选择换船方式 ===
+            logger.info(f'触发换船，当前模式：{self.current_mode}')
+            if self.current_mode == 'hard':
+                # 困难模式使用 HardShipChangeWithEquipmentCode
+                logger.info('使用困难模式换船逻辑（装备码版）')
+                ship_change = HardShipChangeWithEquipmentCode(
+                    config=self.config, 
+                    device=self.device, 
+                    campaign=self.campaign, 
+                    stage=self.stage
+                )
+                if self.change_flagship:
+                    success = ship_change.flagship_change()
+                if self.change_vanguard:
+                    success = success and ship_change.vanguard_change()
+                
+                # 换船成功后重置情感值为高值
+                if success:
+                    logger.info('换船成功，重置情感值')
+                    if self.config.Fleet_FleetOrder == 'fleet1_standby_fleet2_all':
+                        self.config.set_record(Emotion_Fleet1Value=150)
+                        self.config.set_record(Emotion_Fleet2Value=150)
+                    else:
+                        self.config.set_record(Emotion_Fleet1Value=150)
+            else:
+                # 普通模式使用你自己的换船逻辑
+                logger.info('使用普通模式换船逻辑')
+                if self.change_flagship:
+                    success = self.flagship_change()
+                if self.change_vanguard:
+                    success = success and self.vanguard_change()
+
+            if is_limit and self.config.StopCondition_RunCount <= 0:
+                logger.hr('Triggered stop condition: Run count')
+                self.config.StopCondition_RunCount = 0
+                self.config.Scheduler_Enable = False
                 break
+
+            self._trigger_lv32 = False
+            self._trigger_emotion = False
+            self.campaign.config.LV32_TRIGGERED = False
+            self.campaign.config.GEMS_EMOTION_TRIGGERED = False
+            
+            # 换船后延迟一下
+            self.device.sleep(1)
+
+            # Scheduler
+            if self.config.task_switched():
+                self.campaign.ensure_auto_search_exit()
+                self.config.task_stop()
+            elif not success:
+                self.campaign.ensure_auto_search_exit()
+                self.config.task_delay(minute=30)
+                self.config.task_stop()
+
+            continue
+        else:
+            break
