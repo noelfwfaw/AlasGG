@@ -13,5 +13,6 @@
 8. 侵蚀1经验检测 **[@guoh064](https://github.com/guoh064)**
 9. 活动商店 **[@guoh064](https://github.com/guoh064)**
 10. 紧急委托可配置潜艇跨队 **[@guoh064](https://github.com/guoh064)**
+11. 修复大世界跳黄鸡导致Alas报错并停止 **[@guoh064](https://github.com/guoh064)**
    
 不会写代码，只会简单的合并原项目，任何bug请去原项目或者额外功能的分支里提问。
