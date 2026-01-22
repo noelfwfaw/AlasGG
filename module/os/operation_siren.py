@@ -946,8 +946,7 @@ class OperationSiren(OSMap):
 
 
 if __name__ == '__main__':
-    self = OperationSiren('month_test', task='OpsiMonthBoss')
-    from module.os.config import OSConfig
+    self = OperationSiren('alas', task='OpsiMonthBoss')
 
     self.config = self.config.merge(OSConfig())
 
