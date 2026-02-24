@@ -95,7 +95,7 @@ class RaidRun(Raid, CampaignEvent):
 
             # UI switches
             if not self._raid_has_oil_icon:
-                self.ui_goto(page_campaign_menu)
+                self.ui_ensure(page_campaign_menu)
                 if self.triggered_stop_condition(oil_check=True, coin_check=True):
                     break
 
@@ -110,7 +110,7 @@ class RaidRun(Raid, CampaignEvent):
             self.disable_event_on_raid()
 
             # End for mode EX
-            if mode == 'ex':
+            if mode == 'ex' and not self.is_raid_rpg():
                 if not self.get_remain(mode):
                     logger.info('Triggered stop condition: Zero '
                                 'raid tickets to do EX mode')

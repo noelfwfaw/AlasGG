@@ -269,6 +269,7 @@
           "cn_android-25",
           "cn_android-26",
           "cn_android-27",
+          "cn_android-28",
           "cn_ios-0",
           "cn_ios-1",
           "cn_ios-2",
@@ -3465,24 +3466,22 @@
         "type": "state",
         "value": "campaign_main",
         "option": [
-          "raid_20240328",
-          "raid_20250116"
+          "raid_20260212"
         ],
         "option_cn": [
-          "raid_20240328"
+          "raid_20260212"
         ],
         "option_en": [
-          "raid_20240328"
+          "raid_20260212"
         ],
         "option_jp": [
-          "raid_20240328"
+          "raid_20260212"
         ],
         "option_tw": [
-          "raid_20250116"
+          "raid_20260212"
         ],
         "option_bold": [
-          "raid_20240328",
-          "raid_20250116"
+          "raid_20260212"
         ]
       },
       "Mode": {
@@ -6897,24 +6896,22 @@
         "type": "state",
         "value": "campaign_main",
         "option": [
-          "raid_20240328",
-          "raid_20250116"
+          "raid_20260212"
         ],
         "option_cn": [
-          "raid_20240328"
+          "raid_20260212"
         ],
         "option_en": [
-          "raid_20240328"
+          "raid_20260212"
         ],
         "option_jp": [
-          "raid_20240328"
+          "raid_20260212"
         ],
         "option_tw": [
-          "raid_20250116"
+          "raid_20260212"
         ],
         "option_bold": [
-          "raid_20240328",
-          "raid_20250116"
+          "raid_20260212"
         ]
       },
       "Mode": {
@@ -8709,7 +8706,8 @@
         "option": [
           2,
           3,
-          4
+          4,
+          5
         ]
       },
       "ShipIndex": {
@@ -8744,7 +8742,8 @@
           2,
           3,
           4,
-          5
+          5,
+          6
         ]
       },
       "ShipIndex": {
