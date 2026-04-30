@@ -25,12 +25,14 @@ class CampaignBase(CampaignBase_):
         self.ui_ensure(page_campaign_menu)
         if self.is_event_entrance_available():
 
+
             self.ui_goto_main()
             if self.ui_page_appear(page_main_white):
                 self.ui_click(EVENT_20201126_DETAIL_WHITE, check_button=EVENT_20201126_DETAIL_CHECK)
             else:
                 self.ui_click(EVENT_20201126_DETAIL, check_button=EVENT_20201126_DETAIL_CHECK)
-            self.ui_click(EVENT_20201126_ENTRANCE, check_button=EVENT_20201126_PT_ICON, 
+
+            self.ui_click(EVENT_20201126_ENTRANCE, check_button=EVENT_20201126_PT_ICON,
                           appear_button=EVENT_20201126_DETAIL_CHECK, offset=(40, 20))
 
             return True
