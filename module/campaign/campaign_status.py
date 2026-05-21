@@ -116,21 +116,26 @@ class CampaignStatus(UI):
     def _get_num(self, _button, name):
         # Update offset
         _ = self.appear(OCR_OIL_CHECK)
-
-        color = get_color(self.device.image, OCR_OIL_CHECK.button)
-        if color_similar(color, OCR_OIL_CHECK.color):
-            # Original color
-            if server.server != 'jp':
-                ocr = Digit(_button, name=name, letter=(247, 247, 247), threshold=128)
-            else:
-                ocr = Digit(_button, name=name, letter=(201, 201, 201), threshold=128)
-        elif color_similar(color, (59, 59, 64)):
-            # With black overlay
-            ocr = Digit(_button, name=name, letter=(165, 165, 165), threshold=128)
+        
+        # 如果已经是 Digit 对象，直接使用
+        if isinstance(_button, Digit):
+            ocr = _button
         else:
-            logger.warning(f'Unexpected OCR_OIL_CHECK color')
-            ocr = Digit(_button, name=name, letter=(247, 247, 247), threshold=128)
-
+            # 否则创建新的 Digit 对象
+            color = get_color(self.device.image, OCR_OIL_CHECK.button)
+            if color_similar(color, OCR_OIL_CHECK.color):
+                # Original color
+                if server.server != 'jp':
+                    ocr = Digit(_button, name=name, letter=(247, 247, 247), threshold=128)
+                else:
+                    ocr = Digit(_button, name=name, letter=(201, 201, 201), threshold=128)
+            elif color_similar(color, (59, 59, 64)):
+                # With black overlay
+                ocr = Digit(_button, name=name, letter=(165, 165, 165), threshold=128)
+            else:
+                logger.warning(f'Unexpected OCR_OIL_CHECK color')
+                ocr = Digit(_button, name=name, letter=(247, 247, 247), threshold=128)
+        
         return ocr.ocr(self.device.image)
 
     def get_oil(self, skip_first_screenshot=True, update=False):
