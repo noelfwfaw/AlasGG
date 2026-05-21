@@ -257,6 +257,7 @@ class Raid(MapOperation, RaidCombat, CampaignEvent):
         skip_first_screenshot = True
 
 
+
         # No need, already waited in `raid_execute_once()`
         # if emotion_reduce:
         #     self.emotion.wait(fleet_index)

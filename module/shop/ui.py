@@ -79,7 +79,6 @@ class ShopUI(UI):
         logger.info('Shop refresh')
         refreshed = False
 
-
         # SHOP_REFRESH -> POPUP_CONFIRM
         for _ in self.loop():
             if self.appear(POPUP_CONFIRM, offset=(30, 30)):
@@ -106,7 +105,6 @@ class ShopUI(UI):
                 break
             if self.appear(SHOP_BUY_CONFIRM_MISTAKE, interval=3, offset=(200, 200)):
                 logger.warning('SHOP_BUY_CONFIRM_MISTAKE')
-
                 self.ui_click(SHOP_CLICK_SAFE_AREA, appear_button=POPUP_CONFIRM, check_button=SHOP_BACK_ARROW,
                               offset=(20, 30), skip_first_screenshot=True)
                 refreshed = False
@@ -114,7 +112,6 @@ class ShopUI(UI):
             if self.handle_popup_confirm('SHOP_REFRESH_CONFIRM'):
                 refreshed = True
                 continue
-
 
         self.handle_info_bar()
         return refreshed

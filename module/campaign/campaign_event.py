@@ -31,6 +31,7 @@ class CampaignEvent(CampaignStatus):
                     campaign_to_go = '2-4'
                 logger.info(f'Reset GemsFarming to {campaign_to_go}')
                 self.config.cross_set(keys=f'{task}.Campaign.Name', value=campaign_to_go)
+
                 self.config.cross_set(keys=f'{task}.Campaign.Event', value='campaign_main')
 
     def _disable_tasks(self, tasks):

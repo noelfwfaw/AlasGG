@@ -8,13 +8,6 @@ from module.handler.assets import POPUP_CONFIRM, STORY_SKIP
 from module.logger import logger
 from module.ocr.ocr import Digit
 from module.retire.retirement import Retirement
-import module.config.server as server
-from module.log_res.log_res import LogRes
-
-if server.server != 'jp':
-    OCR_COIN = Digit(OCR_COIN, name='OCR_COIN', letter=(247, 247, 247), threshold=128)
-else:
-    OCR_COIN = Digit(OCR_COIN, name='OCR_COIN', letter=(201, 201, 201), threshold=128)
 
 RECORD_GACHA_OPTION = ('RewardRecord', 'gacha')
 RECORD_GACHA_SINCE = (0,)
@@ -336,11 +329,7 @@ class RewardGacha(GachaUI, Retirement):
         if self.config.Gacha_Amount > self.build_ticket_count:
             buy[0] = self.build_ticket_count
             # Calculate rolls allowed based on configurations and resources
-
-
             buy[1] = self.gacha_calculate(self.config.Gacha_Amount - self.build_ticket_count, gold_cost, cube_cost)
-
-
 
         # Submit 'buy_count' and execute if capable
         # Cannot use handle_popup_confirm, this window

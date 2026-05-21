@@ -102,7 +102,6 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         name = name.replace('リバプル', 'リバープール')
         name = name.replace('リバープル', 'リバープール')
         name = name.replace('リバプール', 'リバープール')
-
         return name
 
     @Config.when(SERVER='tw')

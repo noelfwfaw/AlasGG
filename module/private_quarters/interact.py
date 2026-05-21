@@ -91,7 +91,6 @@ class PQInteract(UI):
                 self._pq_handle_dialogue()
                 settle_timer.reset()
 
-
     def _pq_goto_room_seek(self, target_ship):
         """
         Execute seek room routine

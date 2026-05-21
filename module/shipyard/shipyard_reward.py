@@ -17,6 +17,7 @@ else:
     OCR_COIN = Digit(OCR_COIN, name='OCR_COIN', letter=(201, 201, 201), threshold=128)
 
 
+
 PRBP_BUY_PRIZE = {
     (1, 2):               0,
     (3, 4):               150,

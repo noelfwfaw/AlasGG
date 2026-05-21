@@ -1006,6 +1006,7 @@
       "event_20260226_cn": "Springtide Inn Online",
       "event_20260326_cn": "The Vagabond’s Recruitment Plan",
       "event_20260417_cn": "Vacation Lane – Beachside Brilliance",
+      "event_20260520_cn": "Alliance Before the Hagiobull",
       "raid_20200624": "Air Raid Drills with Essex Rerun",
       "raid_20210708": "Cross Wave rerun",
       "raid_20220127": "Mystery Investigation",
@@ -1057,9 +1058,11 @@
       "war_archives_20220428_cn": "archives Rondo at Rainbows End",
       "war_archives_20220526_cn": "archives Pledge of the Radiant Court",
       "war_archives_20220728_cn": "archives Aquilifers Ballade",
+      "war_archives_20220818_cn": "archives Operation Convergence",
       "war_archives_20220915_cn": "archives Violet Tempest Blooming Lycoris",
       "war_archives_20221222_cn": "archives Parallel Superimposition",
       "war_archives_20230223_cn": "archives Revelations of Dust",
+      "war_archives_20230803_cn": "archives Anthem of Remembrance",
       "war_archives_20231026_cn": "archives Tempesta and the Fountain of Youth"
     },
     "Mode": {
@@ -1447,8 +1450,7 @@
       "name": "Change Vanguard",
       "help": "Change vanguard if flagship or vanguard are emotion exhausted. If you choose not to change, your fleet will ignore the low emotion warning and continue combat.\nSwitch out to new level 100(70) common vanguard from eagle or ironblood after current flagship has reached level 32+ (Only CN players'0 limit break ship can reach level 100)\n\nThe vanguard's equipment is replaced when being switched out by first recording the current setup. Only populated equipment slots will be replaced.",
       "disabled": "Don't Change",
-      "ship": "Change Ship",
-      "ship_equip": "Change Ship + Gears"
+      "ship": "Change Ship"
     },
     "ALLowLowVanguardLevel": {
       "name": "ALLow Low Vanguard Level",
