@@ -1465,7 +1465,8 @@
       "name": "GemsFarming.ChangeVanguard.name",
       "help": "GemsFarming.ChangeVanguard.help",
       "disabled": "disabled",
-      "ship": "ship"
+      "ship": "ship",
+      "ship_equip": "ship_equip"
     },
     "CommonDD": {
       "name": "GemsFarming.CommonDD.name",
