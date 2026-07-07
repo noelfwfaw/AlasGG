@@ -83,7 +83,7 @@
       "help": ""
     },
     "Coalition": {
-      "name": "光影風尚-拍攝進行時",
+      "name": "極地風暴",
       "help": ""
     },
     "MaritimeEscort": {
@@ -123,7 +123,7 @@
       "help": ""
     },
     "CoalitionSp": {
-      "name": "光影風尚-拍攝進行時SP",
+      "name": "極地風暴SP",
       "help": ""
     },
     "Commission": {
@@ -1344,10 +1344,11 @@
     "Mode": {
       "name": "難度",
       "help": "SP圖需要使用活動每日SP運行",
-      "easy": "easy",
-      "normal": "normal",
-      "hard": "hard",
-      "sp": "sp"
+      "tc1": "tc1",
+      "tc2": "tc2",
+      "tc3": "tc3",
+      "sp": "sp",
+      "ex": "ex"
     },
     "Fleet": {
       "name": "出擊隊伍",
@@ -1462,7 +1463,7 @@
       "help": ""
     },
     "Favorite": {
-      "name": "優先選擇常用",
+      "name": "僅選擇常用角色",
       "help": ""
     },
     "MinLevel": {
@@ -1585,6 +1586,10 @@
     "FortChoreMeowfficer": {
       "name": "喵窩互動",
       "help": "清掃、餵食和逗貓"
+    },
+    "OverflowCoins": {
+      "name": "金幣溢出時購買貓箱",
+      "help": "當金幣高於此值時，繼續購買貓箱直至金幣降至此值或貓箱售罄；-1 關閉"
     }
   },
   "MeowfficerTrain": {
@@ -2140,7 +2145,8 @@
       "sirius": "天狼星",
       "new_jersey": "紐澤西",
       "taihou": "大鳳",
-      "aegir": "埃吉爾"
+      "aegir": "埃吉爾",
+      "nakhimov": "纳希莫夫"
     }
   },
   "Daily": {

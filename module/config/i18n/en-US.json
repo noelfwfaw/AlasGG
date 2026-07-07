@@ -87,7 +87,7 @@
       "help": ""
     },
     "Coalition": {
-      "name": "Light & Shadow Fashion Shoot",
+      "name": "Frostfall",
       "help": ""
     },
     "MaritimeEscort": {
@@ -127,7 +127,7 @@
       "help": ""
     },
     "CoalitionSp": {
-      "name": "Light & Shadow Fashion Shoot SP",
+      "name": "Frostfall SP",
       "help": ""
     },
     "Commission": {
@@ -1595,10 +1595,11 @@
     "Mode": {
       "name": "Mode",
       "help": "SP needs to use event daily SP to run",
-      "easy": "easy",
-      "normal": "normal",
-      "hard": "hard",
-      "sp": "sp"
+      "tc1": "tc1",
+      "tc2": "tc2",
+      "tc3": "tc3",
+      "sp": "sp",
+      "ex": "ex"
     },
     "Fleet": {
       "name": "Fleet",
@@ -1713,7 +1714,7 @@
       "help": ""
     },
     "Favorite": {
-      "name": "Use Favorite Filter",
+      "name": "Only Favorite Ships",
       "help": "During student selection apply the favorite filter\nThereby, giving priority to certain ship girls\nApply the favorite status to a ship girl in-game"
     },
     "MinLevel": {
@@ -1836,6 +1837,10 @@
     "FortChoreMeowfficer": {
       "name": "Do Fort Chores",
       "help": "Completes all 3 chores; clean, feed, and play with meowfficer to get fort exp"
+    },
+    "OverflowCoins": {
+      "name": "Buy Boxes On Coin Overflow",
+      "help": "When coins are above this value, keep buying boxes until coins drop to it or boxes run out; -1 to disable"
     }
   },
   "MeowfficerTrain": {
@@ -2387,7 +2392,8 @@
       "sirius": "Sirius",
       "new_jersey": "New Jersey",
       "taihou": "Taihou",
-      "aegir": "Aegir"
+      "aegir": "Aegir",
+      "nakhimov": "Nakhimov"
     }
   },
   "Daily": {
