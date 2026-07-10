@@ -1859,6 +1859,17 @@
         "value": true
       }
     },
+    "EquipmentCode": {
+      "ExportToConfig": {
+        "type": "checkbox",
+        "value": true
+      },
+      "Config": {
+        "type": "textarea",
+        "value": "DD: null\nbogue: null\nhermes: null\nlangley: null\nranger: null",
+        "mode": "yaml"
+      }
+    },
     "Campaign": {
       "Name": {
         "type": "input",
@@ -1868,7 +1879,6 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ],
         "option_cn": [
@@ -1881,10 +1891,9 @@
           "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_bold": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ]
       },
@@ -2145,13 +2154,14 @@
       },
       "Fleet2Value": {
         "type": "input",
-        "value": 119
+        "value": 119,
+        "display": "hide"
       },
       "Fleet2Record": {
         "type": "datetime",
         "value": "2020-01-01 00:00:00",
         "validate": "datetime",
-        "display": "disabled"
+        "display": "hide"
       },
       "Fleet2Control": {
         "type": "select",
@@ -2274,7 +2284,6 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ],
         "option_cn": [
@@ -2287,10 +2296,9 @@
           "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_bold": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ]
       },
@@ -2671,7 +2679,6 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ],
         "option_cn": [
@@ -2684,10 +2691,9 @@
           "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_bold": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ]
       },
@@ -4887,7 +4893,6 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ],
         "option_cn": [
@@ -4900,10 +4905,9 @@
           "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_bold": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ]
       },
@@ -5301,7 +5305,6 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ],
         "option_cn": [
@@ -5314,10 +5317,9 @@
           "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_bold": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ]
       },
@@ -5715,7 +5717,6 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ],
         "option_cn": [
@@ -5728,10 +5729,9 @@
           "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_bold": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ]
       },
@@ -6129,7 +6129,6 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ],
         "option_cn": [
@@ -6142,10 +6141,9 @@
           "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_bold": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ]
       },
@@ -6533,7 +6531,6 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ],
         "option_cn": [
@@ -6546,10 +6543,9 @@
           "event_20260625_cn"
         ],
         "option_tw": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_bold": [
-          "event_20230223_cn",
           "event_20260625_cn"
         ]
       },
@@ -7617,9 +7613,12 @@
       },
       "PresetFilter": {
         "type": "select",
-        "value": "series_8_blueprint_305",
+        "value": "series_9_blueprint_ta152",
         "option": [
           "custom",
+          "series_9_blueprint_ta152",
+          "series_9_blueprint_only",
+          "series_9_ta152_only",
           "series_8_blueprint_305",
           "series_8_blueprint_only",
           "series_8_305_only",
@@ -7646,7 +7645,7 @@
       },
       "CustomFilter": {
         "type": "textarea",
-        "value": "S8-DR0.5 > S8-PRY0.5 > S8-Q0.5 > S8-H0.5 > Q0.5 > S8-DR2.5\n> S8-G1.5 > S8-Q1 > S8-DR5 > 0.5 > S8-G4 > S8-Q2 > S8-PRY2.5 > reset\n> S8-DR8 > Q1 > 1 > S8-E-315 > S8-G2.5 > G1.5 > 1.5 > S8-E-031\n> S8-Q4 > Q2 > E2 > 2 > DR2.5 > PRY2.5 > G2.5 > 2.5 > S8-PRY5\n> S8-PRY8 > Q4 > G4 > 4 > S8-C6 > DR5 > PRY5 > 5 > C6 > 6 > S8-C8\n> S8-C12 > DR8 > PRY8 > C8 > 8 > C12 > 12"
+        "value": "S9-DR0.5 > S9-PRY0.5 > S9-Q0.5 > S9-H0.5 > Q0.5 > S9-DR2.5\n> S9-G1.5 > S9-Q1 > S9-DR5 > 0.5 > S9-G4 > S9-Q2 > S9-PRY2.5 > reset\n> S9-DR8 > Q1 > 1 > S9-E-315 > S9-G2.5 > G1.5 > 1.5 > S9-E-031\n> S9-Q4 > Q2 > E2 > 2 > DR2.5 > PRY2.5 > G2.5 > 2.5 > S9-PRY5\n> S9-PRY8 > Q4 > G4 > 4 > S9-C6 > DR5 > PRY5 > 5 > C6 > 6 > S9-C8\n> S9-C12 > DR8 > PRY8 > C8 > 8 > C12 > 12"
       }
     },
     "Storage": {

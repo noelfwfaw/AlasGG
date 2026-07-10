@@ -1,12 +1,11 @@
 from module.combat.combat import *
 from module.exercise.assets import *
-from module.exercise.equipment import ExerciseEquipment
 from module.exercise.hp_daemon import HpDaemon
 from module.exercise.opponent import OPPONENT, OpponentChoose
 from module.ui.assets import EXERCISE_CHECK
 
 
-class ExerciseCombat(HpDaemon, OpponentChoose, ExerciseEquipment, Combat):
+class ExerciseCombat(HpDaemon, OpponentChoose, Combat):
     def _in_exercise(self):
         return self.appear(EXERCISE_CHECK, offset=(20, 20))
 
@@ -215,3 +214,4 @@ class ExerciseCombat(HpDaemon, OpponentChoose, ExerciseEquipment, Combat):
     #     self._choose_opponent(0)
     #     super().equipment_take_on()
     #     self._preparation_quit()
+

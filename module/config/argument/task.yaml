@@ -60,13 +60,12 @@ Farm:
     GemsFarming:
       - Scheduler
       - GemsFarming
+      - EquipmentCode
       - Campaign
       - StopCondition
       - Fleet
       - Submarine
       - Emotion
-
-      
 
 
 # ==================== Event ====================

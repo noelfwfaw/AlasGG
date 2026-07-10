@@ -1,276 +1,267 @@
-import re
 import yaml
 
-from module.config.config import AzurLaneConfig
+from module.base.timer import Timer
+from module.device.method.utils import HierarchyButton
 from module.equipment.assets import *
-from module.exception import RequestHumanTakeover
 from module.logger import logger
+from module.retire.assets import TEMPLATE_BOGUE, TEMPLATE_HERMES, TEMPLATE_RANGER, TEMPLATE_LANGLEY
 from module.storage.assets import EQUIPMENT_FULL
 from module.storage.storage import StorageHandler
 
-
-BASE64_REGEX = re.compile('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
-EMPTY_GEAR_CODE = "MC8wLzAvMC8wXDA="
-
-def is_equip_code(string):
-    """
-    Checks if current string is None or BASE64 string.
-    """
-    if string is None:
-        return True
-    if not isinstance(string, str):
-        return False
-    return BASE64_REGEX.match(string)
-
-
-class EquipmentCode:
-    config: AzurLaneConfig
-    config_key: str
-    coded_ships: list
-    
-    def __setattr__(self, key, value):
-        if key in ['config', 'config_key', 'coded_ships']:
-            super().__setattr__(key, value)
-        elif key in self.coded_ships:
-            if is_equip_code(value):
-                super().__setattr__(key, value)
-            else:
-                logger.error(f'{value} is not a gear code, skip setting {key}')
-        else:
-            logger.error(f'{key} is not in coded ships: {self.coded_ships}')
-
-    def __init__(self, config, key, ships):
-        """
-        Args:
-            config (AzurLaneConfig):
-            key: location of config containing gear code configs
-            ships (list of string): ships whose gear codes should be memorized
-        """
-        self.config = config
-        self.config_key = key
-        self.coded_ships = ships
-        _config = config.cross_get(keys=key)
-        codes = dict([(ship, None) for ship in self.coded_ships])
-        for line in _config.splitlines():
-            try:
-                codes.update(yaml.safe_load(line))
-            except Exception as e:
-                logger.error(f'Failed to parse current line of the config: "{line}", skipping')
-        for ship in self.coded_ships:
-            code: str = codes.pop(ship, None)
-            self.__setattr__(ship, code)
-
-    def export_to_config(self):
-        """
-        Export current ships' gear codes to location {self.config_key} of {self.config}.
-        """
-        _config = {}
-        for ship in self.coded_ships:
-            _config.update({ship: self.__getattribute__(ship)})
-        value = yaml.safe_dump(_config)
-        logger.info(f'Gear code configs to be exported: {value}')
-        self.config.cross_set(keys=self.config_key, value=value)
-
+EMPTY_CODE = "MC8wLzAvMC8wXDA="
+U2_CONTROL_METHODS = {'uiautomator2', 'minitouch', 'MaaTouch'}
+EQUIPMENT_PREVIEW = list([
+    EQUIPMENT_CODE_EQUIP_0,
+    EQUIPMENT_CODE_EQUIP_1,
+    EQUIPMENT_CODE_EQUIP_2,
+    EQUIPMENT_CODE_EQUIP_3,
+    EQUIPMENT_CODE_EQUIP_4,
+    EQUIPMENT_CODE_EQUIP_5,
+])
 
 class EquipmentCodeHandler(StorageHandler):
-    codes: EquipmentCode
+    last_code: str = None
 
-    def __init__(self, config, key, ships, device=None, task=None):
-        super().__init__(config, device=device, task=task)
-        self.codes = EquipmentCode(self.config, key=key, ships=ships)
+    def equipment_code_supported(self):
+        method = self.config.Emulator_ControlMethod
+        if method in U2_CONTROL_METHODS:
+            return True
 
-    def enter_equip_code_page(self, skip_first_screenshot=True):
+        logger.warning(
+            f"Equipment code requires uiautomator2 based control method, "
+            f"current control method is {method}, skip equipment change"
+        )
+        return False
+
+    def get_code(self, name):
+        try:
+            config = {}
+            for item in yaml.safe_load_all(self.config.EquipmentCode_Config):
+                config.update(item)
+        except Exception:
+            logger.error("Fail to load equipment code config")
+            return None
+        try:
+            name: str = config.pop(name)
+            return name
+        except Exception:
+            logger.error(f"Config does not contain equipment code for {name}")
+            return None
+
+    def set_code(self, name, code):
+        config = {}
+        try:
+            for item in yaml.safe_load_all(self.config.EquipmentCode_Config):
+                config.update(item)
+        except Exception:
+            pass
+        try:
+            config.update({name: code})
+            config_yaml = yaml.safe_dump(config)
+            self.config.EquipmentCode_Config = config_yaml
+        except Exception:
+            logger.error("Fail to set equipment code config")
+
+    def current_ship(self):
+        """
+        Currently, only supports common CV recognization
+
+        Pages:
+            in: equipment_code
+        """
+        for _ in self.loop():
+            if not self.appear(EMPTY_SHIP_R):
+                break
+        if TEMPLATE_BOGUE.match(self.device.image, scaling=1.46):  # image has rotation
+            logger.info("Bogue detected")
+            return 'bogue'
+        elif TEMPLATE_HERMES.match(self.device.image, scaling=124 / 89):
+            logger.info("Hermes detected")
+            return 'hermes'
+        elif TEMPLATE_RANGER.match(self.device.image, scaling=4 / 3):
+            logger.info("Ranger detected")
+            return 'ranger'
+        elif TEMPLATE_LANGLEY.match(self.device.image, scaling=25 / 21):
+            logger.info("Langley detected")
+            return 'langley'
+        else:
+            logger.warning("Unknown ship detected, assuming DD")
+            return 'DD'
+
+    def _code_enter(self):
         """
         Pages:
             in: ship_detail
-            out: gear_code
+            out: equipment_code
         """
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            # End
-            if self.appear(EQUIPMENT_CODE_PAGE_CHECK):
+        for _ in self.loop():
+            if self.appear(EQUIPMENT_CODE_PAGE_CHECK, offset=(5, 5)):
                 break
 
-            if self.appear_then_click(EQUIPMENT_CODE_ENTRANCE):
+            if self.appear_then_click(EQUIPMENT_CODE_ENTRANCE, offset=(5, 5), interval=1):
                 continue
 
-    # def exit_equip_code_page(self):
-    #     """
-    #     Pages:
-    #         in: gear_code
-    #         out: ship_detail
-    #     """
-    #     self.ui_back(check_button=EQUIPMENT_CODE_ENTRANCE)
-
-    def current_ship(self):
-        # Will be overridden in subclasses.
-        pass
-
-    def click_export_button(self, skip_first_screenshot=True):
-        self.handle_info_bar()
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            # End
-            if self.info_bar_count():
-                break
-
-            if self.appear_then_click(EQUIPMENT_CODE_EXPORT, interval=1):
-                continue
-
-    def export_equip_code(self, ship=None):
+    def _code_exit(self):
         """
-        Export current ship's gear code to config file.
-        This is done by first using "export" button 
-        to export gear code to clipboard,
-        then update the config file using yaml.safe_dump().
+        Pages:
+            in: equipment_code
+            out: ship_detail
         """
-        code = self.device.clipboard
-        if code == EMPTY_GEAR_CODE:
-            logger.info('Detect 0/0/0/0/0\\0 code, continue exporting.')
-        logger.attr("Gear code", code)
-        if not ship in self.codes.coded_ships:
-            ship = self.current_ship()
-        logger.attr("Current ship", ship)
-        logger.info(f'Set gear code of {ship} to be {code}')
-        self.codes.__setattr__(ship, code)
-        self.codes.export_to_config()
+        self.ui_back(check_button=EQUIPMENT_CODE_ENTRANCE)
 
-    def equip_preview_empty(self):
-        if self.appear(EQUIPMENT_CODE_EQUIP_5_LOCKED):
+    def is_code_preview_loaded(self):
+        if self.appear(EQUIPMENT_CODE_EQUIP_5_LOCKED, offset=(5, 5)):
             max_index = 5
         else:
             max_index = 6
         for index in range(max_index):
-            if not self.appear(globals()['EQUIPMENT_CODE_EQUIP_{index}'.format(index=index)]):
-                return False
-        
-        return True
-    
-    def clear_equip_preview(self, skip_first_screenshot=True):
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
 
-            # End
-            if self.equip_preview_empty():
-                logger.info('Confirm equipment preview cleared.')
-                break
-
-            if self.appear_then_click(EQUIPMENT_CODE_CLEAR):
-                continue
-
-    def enter_equip_code_input_mode(self, skip_first_screenshot=True):
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            if self.appear(EQUIPMENT_CODE_ENTER):
-                self.device.click(EQUIPMENT_CODE_TEXTBOX)
-                continue
-
-            # End
-            if self.device.ime_shown():
-                break
-
-    def confirm_equip_code(self, skip_first_screenshot=False):
-        check_counter = 0
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            if self.appear_then_click(EQUIPMENT_CODE_ENTER, interval=1):
-                continue
-
-            # End
-            if not self.equip_preview_empty():
-                logger.info('Confirm gear code loaded.')
+            if not self.appear(EQUIPMENT_PREVIEW[index], offset=(5, 5)):
                 return True
-            else:
-                check_counter += 1
-                if check_counter >= 5:
-                    logger.error('Gear code load failed, retrying.')
+
+        return False
+
+    def _code_preview_clear(self):
+        for _ in self.loop(timeout=2):
+            if not self.is_code_preview_loaded():
+                return True
+
+            if self.appear_then_click(EQUIPMENT_CODE_CLEAR, offset=(5, 5), interval=1):
+                continue
+        else:
+            return False
+
+    def fastinput_ime_enable(self):
+        self.device.adb_shell(['am', 'start', '-a', 'android.settings.INPUT_METHOD_SETTINGS'])
+        while 1:
+            h = self.device.dump_hierarchy_adb()
+
+            def appear(xpath):
+                return bool(HierarchyButton(h, xpath))
+
+            def appear_then_click(xpath):
+                b = HierarchyButton(h, xpath)
+                if b:
+                    self.device.click(b)
+                    return True
+                else:
                     return False
 
-    def confirm_equip_preview(self, skip_first_screenshot=True):
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
-
-            if self.appear_then_click(EQUIPMENT_CODE_CONFIRM, interval=5):
+            if appear_then_click('//*[@resource-id="android:id/title" and @text="FastInputIME"]/following-sibling::*[@resource-id="android:id/switch_widget" and @checked="false"]'):
                 continue
-
-            if self.handle_popup_confirm('EQUIPMENT_CODE'):
+            if appear_then_click('//*[@resource-id="android:id/button1"]'):
                 continue
+            # Disable one other enabled IME at a time
+            if appear_then_click('(//*[@resource-id="android:id/title" and @text!="FastInputIME"]/following-sibling::*[@resource-id="android:id/switch_widget" and @enabled="true" and @checked="true"])[1]'):
+                continue
+            if appear('//*[@resource-id="android:id/title" and @text="FastInputIME"]/following-sibling::*[@resource-id="android:id/switch_widget" and @checked="true"]') \
+                    and not appear('//*[@resource-id="android:id/title" and @text!="FastInputIME"]/following-sibling::*[@resource-id="android:id/switch_widget" and @enabled="true" and @checked="true"]'):
+                break
 
-            # End
-            if self.appear(EQUIPMENT_CODE_ENTRANCE):
+        self.device.adb_shell(['input', 'keyevent', '4'])
+
+    def set_fastinput_ime(self):
+        d = self.device.u2
+        try:
+            d.set_fastinput_ime(True)
+        except Exception:
+            logger.warning("FastInputIME not enabled, trying to enable it")
+            self.fastinput_ime_enable()
+
+    def _code_input(self, code):
+        logger.info(f"Code input: {code}")
+        d = self.device.u2
+        click_timer = Timer(1, count=3)
+        for _ in self.loop():
+            name, shown = d.current_ime()
+            if shown:
+                if name != 'com.github.uiautomator/.FastInputIME':
+                    self.set_fastinput_ime()
+                    continue
+                else:
+                    break
+            if click_timer.reached_and_reset():
+                self.device.click(EQUIPMENT_CODE_TEXTBOX)
+        else:
+            logger.warning("Equipment code load failed")
+            return False
+        d.send_keys(text=code, clear=True)
+        d.send_action(code="done")
+        self.device.sleep((0.3, 0.5))
+        for _ in self.loop(timeout=10, skip_first=False):
+            _, shown = d.current_ime()
+            if shown:
+                continue
+            if self.is_code_preview_loaded():
+                return True
+            if self.appear_then_click(EQUIPMENT_CODE_ENTER, offset=(5, 5), interval=3):
+                continue
+        else:
+            logger.warning("Equipment code load failed")
+            return False
+
+    def _code_confirm(self):
+        logger.info("Code apply")
+        for _ in self.loop(timeout=10):
+            if self.appear(EQUIPMENT_CODE_ENTRANCE, offset=(5, 5)):
                 return True
             if self.appear(EQUIPMENT_FULL, offset=(30, 30)):
                 return False
-
-    def clear_all_equip(self):
-        self.enter_equip_code_page()
-        ship = self.current_ship()
-        self.device.u2_set_fastinput_ime(True)
-        logger.attr("Current_ime", self.device.u2_current_ime())
-        self.click_export_button()
-        if self.codes.__getattribute__(ship) is None:
-            self.export_equip_code(ship)
-        self.clear_equip_preview()
-        for _ in range(5):
-            success = self.confirm_equip_preview()
-            if success:
-                return True
-            else:
-                self.handle_storage_full()
-                self.clear_equip_preview()
-
-        raise RequestHumanTakeover(
-            f'Failed to clear all equipment for {ship}, please check manually.'
-        )
-
-    def apply_equip_code(self, code=None):
-        self.enter_equip_code_page()
-        self.clear_equip_preview()
-        if code is None:
-            ship = self.current_ship()
-            code = self.codes.__getattribute__(ship)
-            if code is None:
-                code = self.device.clipboard  # assuming clipboard is not modified
-            logger.info(f'Apply gear code {code} for {ship}')
+            if self.handle_popup_confirm("EQUIPMENT_CODE"):
+                continue
+            if self.appear_then_click(EQUIPMENT_CODE_CONFIRM, offset=(5, 5), interval=3):
+                continue
         else:
-            logger.info(f'Forcefully apply gear code {code} to current ship.')
+            return False
+
+    def _code_apply(self, code=None):
         for _ in range(5):
-            if code is not None and code != EMPTY_GEAR_CODE:
-                self.enter_equip_code_input_mode()
-                self.device.text_input_and_confirm(code, clear=True)
-                success = self.confirm_equip_code()
+            self._code_preview_clear()
+            if code is not None and code != EMPTY_CODE:
+                success = self._code_input(code)
                 if not success:
                     continue
-            success = self.confirm_equip_preview()
+            success = self._code_confirm()
             if success:
-                logger.info("Gear code import complete.")
+                logger.info("Equipment code apply complete.")
                 return True
             else:
                 self.handle_storage_full()
-                self.clear_equip_preview()
+        else:
+            return False
 
-        raise RequestHumanTakeover(
-            f'Failed to apply equipment for {ship}, please check manually.'
-        )
+    def _code_export(self):
+        self.handle_info_bar()
+        d = self.device.u2
+        for _ in self.loop(timeout=10):
+            if self.info_bar_count():
+                break
+            if self.appear_then_click(EQUIPMENT_CODE_EXPORT, offset=(5, 5), interval=3):
+                continue
+        code = d.clipboard
+        return code
+
+    def code_clear(self, name=None):
+        if not self.equipment_code_supported():
+            return False
+
+        self._code_enter()
+        if name is None:
+            name = self.current_ship()
+        if self.config.EquipmentCode_ExportToConfig and self.get_code(name=name) is None:
+            self.last_code = self._code_export()
+            self.set_code(name=name, code=self.last_code)
+        return self._code_apply(code=None)
+
+    def code_apply(self, name=None):
+        if not self.equipment_code_supported():
+            return False
+
+        self._code_enter()
+        if name is None:
+            name = self.current_ship()
+        code = self.get_code(name=name)
+        if code is None:
+            code = self.last_code
+        return self._code_apply(code=code)
+
