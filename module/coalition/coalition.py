@@ -61,6 +61,8 @@ class Coalition(CoalitionCombat, CampaignEvent):
             ocr = DALPtOcr(DAL_PT_OCR, name='OCR_PT', letter=(255, 213, 69), threshold=128)
         elif event == 'coalition_20260122':
             ocr = Digit(FASHION_PT_OCR, name='OCR_PT', letter=(41, 40, 40), threshold=128)
+        elif event == 'coalition_20260723':
+            ocr = Digit(HORROR_PT_OCR, name='OCR_PT', lang='cnocr', letter=(228, 230, 237), threshold=256)
         else:
             logger.error(f'ocr object is not defined in event {event}')
             raise ScriptError
@@ -89,6 +91,8 @@ class Coalition(CoalitionCombat, CampaignEvent):
         https://github.com/LmeSzinc/AzurLaneAutoScript/issues/5214
         """
         if self.config.Campaign_Event == 'coalition_20260122':
+            return False
+        if self.config.Campaign_Event == 'coalition_20260723':
             return False
         return True
 
@@ -232,5 +236,6 @@ class Coalition(CoalitionCombat, CampaignEvent):
 
 if __name__ == '__main__':
     self = Coalition('alas5', task='Coalition')
-    self.device.screenshot()
+    self.image_file = r''
+    # self.device.screenshot()
     self.get_event_pt()
