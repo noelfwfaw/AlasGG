@@ -1611,10 +1611,10 @@
     "Mode": {
       "name": "Mode",
       "help": "SP needs to use event daily SP to run",
-      "easy": "easy",
-      "normal": "normal",
-      "hard": "hard",
-      "sp": "sp"
+      "easy": "EASY",
+      "normal": "NORMAL",
+      "hard": "HARD",
+      "sp": "SP"
     },
     "Fleet": {
       "name": "Fleet",
