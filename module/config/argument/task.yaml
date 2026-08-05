@@ -121,12 +121,6 @@ Event:
       - Hospital
       - StopCondition
       - Emotion
-    MaritimeEscort:
-      - Scheduler
-      - MaritimeEscort
-    EventShop:
-      - Scheduler
-      - EventShop
     WarArchives:
       - Scheduler
       - Campaign
