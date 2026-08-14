@@ -9,9 +9,9 @@
 5. 优化截图速度，可适配更低配置的电脑 x 
    可更低配置的模拟器稳定多开 √
 6. 紧急委托心情即将不足时提前撤退并触发换船 **[@guoh064](https://github.com/guoh064)**
-7. 原项目由于无人维护已经删除替换装备系统，这里借用了@guoh064的紧急委托装备码换装备 **[@guoh064](https://github.com/guoh064)**
+7. 装备码，UI跟原项目重合了好像，但能正常使用 **[@guoh064](https://github.com/guoh064)**
 8. 侵蚀1经验检测 **[@guoh064](https://github.com/guoh064)**
-9. 活动商店 **[@guoh064](https://github.com/guoh064)**
+9. 活动商店，我自己用有很多问题，所以我关了 **[@guoh064](https://github.com/guoh064)**
 10. 紧急委托可配置潜艇跨队 **[@guoh064](https://github.com/guoh064)**
 11. 修复大世界跳黄鸡导致Alas报错并停止 **[@guoh064](https://github.com/guoh064)**
    
