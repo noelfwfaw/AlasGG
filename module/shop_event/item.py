@@ -107,10 +107,9 @@ class PriceOcr(Digit):
         image = super().pre_process(image)
         return image
 
-if server.server == 'jp':
-    PRICE_OCR = PriceOcr([], lang='cnocr', letter=(220, 220, 220), threshold=160, name='Price_ocr')
-else:
-    PRICE_OCR = PriceOcr([], letter=(255, 255, 255), threshold=128, name='Price_ocr')
+
+PRICE_OCR = PriceOcr([], letter=(221, 221, 221), threshold=128, name='Price_ocr')
+
 
 
 URPT_PRICE_IN_PT = 150  # 1 URpt costs 150 pt
@@ -138,7 +137,9 @@ class EventShopItem(Item):
 
     def predict_valid(self):
         luma = rgb2luma(self.image)
-        return np.mean(luma > 127) >= 0.3
+
+        return np.mean(luma > 127) >= 0.2
+
 
     @property
     def scroll_pos(self):
@@ -178,8 +179,13 @@ class EventShopItem(Item):
                 self.name = 'URpt'
             elif self.name.isdigit():
                 logger.warning(f'Unrecognized item with price {self.price} and total count {self.total_count}, '
-                               f'defaulting to EquipSSR')
-                self.name = 'EquipSSR'
+                               # f'defaulting to EquipSSR')
+                               f'saving image for analysis.')
+                import os
+                from module.base.utils import save_image
+                os.mkdir('assets/shop/event/new_templates/') if not os.path.exists('assets/shop/event/new_templates/') else None
+                save_image(self.image, f'assets/shop/event/new_templates/{self.name}.png')
+                # self.name = 'EquipSSR'
 
     def predict_genre(self):
         self.group, self.sub_genre, self.tier = None, None, None

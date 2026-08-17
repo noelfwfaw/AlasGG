@@ -14,41 +14,22 @@ from module.meowfficer.assets import MEOWFFICER_GET_CHECK, MEOWFFICER_TRAIN_CLIC
 from module.meowfficer.collect import SWITCH_LOCK
 from module.ocr.ocr import Ocr, Digit
 from module.shop.assets import SHOP_OCR_BALANCE, SHOP_OCR_OIL_CHECK, SHOP_OCR_OIL
+from module.shop.shop_medal import ShopScroll
 from module.shop_event.assets import *
 from module.ui.navbar import Navbar
-from module.ui.scroll import Scroll
 from module.ui.ui import UI
 
 
-class EventShopScroll(Scroll):
-    def match_color(self, main):
-        background_transparency = 0.2
-        button_transparency = 0.5
-        delta_x = 3
-        area = (
-            self.area[0] - delta_x,
-            self.area[1],
-            self.area[2] + delta_x,
-            self.area[3]
-        )
-        image = main.image_crop(area, copy=False).astype(np.float)
-        baseline_color = np.mean(image[:, [0, -1], :], axis=1)
-        masked_color = image[:, image.shape[1] // 2, :]
-        background_mask = background_transparency * np.array(self.color) + (1 - background_transparency) * baseline_color
-        button_mask = button_transparency * np.array(self.color) + (1 - button_transparency) * baseline_color
-        err_background = np.sum((masked_color - background_mask) ** 2, axis=1)
-        err_button = np.sum((masked_color - button_mask) ** 2, axis=1)
-        mask = err_button < err_background
-        self.length = np.sum(mask)
-        # print(mask)
-        return mask
+EVENT_SHOP_SCROLL = ShopScroll(
 
-
-EVENT_SHOP_SCROLL = EventShopScroll(
     EVENT_SHOP_SCROLL_AREA,
     color=(44, 48, 56),
     name="EVENT_SHOP_SCROLL"
 )
+
+EVENT_SHOP_SCROLL.drag_threshold = 0.08
+EVENT_SHOP_SCROLL.edge_threshold = 0.1
+
 
 
 if server.server == 'tw':
@@ -60,12 +41,10 @@ else:
 OCR_EVENT_SHOP_DEADLINE = Ocr(SHOP_EVENT_DEADLINE, lang='cnocr', letter=EVENT_SHOP_DEADLINE_COLOR,
                               alphabet='0123456789.:~-', name="OCR_EVENT_SHOP_DEADLINE")
 
-if server.server == 'jp':
-    OCR_EVENT_SHOP_PT = Digit(SHOP_OCR_BALANCE, lang='cnocr', letter=(110, 120, 130), name='OCR_EVENT_SHOP_PT')
-    OCR_EVENT_SHOP_URPT = Digit(SHOP_OCR_BALANCE_SECOND, lang='cnocr', letter=(110, 120, 130), name='OCR_EVENT_SHOP_URPT')
-else:
-    OCR_EVENT_SHOP_PT = Digit(SHOP_OCR_BALANCE, letter=(100, 100, 100), name='OCR_EVENT_SHOP_PT')
-    OCR_EVENT_SHOP_URPT = Digit(SHOP_OCR_BALANCE_SECOND, letter=(100, 100, 100), name='OCR_EVENT_SHOP_URPT')
+
+OCR_EVENT_SHOP_PT = Digit(SHOP_OCR_BALANCE, letter=(100, 100, 100), name='OCR_EVENT_SHOP_PT')
+OCR_EVENT_SHOP_URPT = Digit(SHOP_OCR_BALANCE_SECOND, letter=(100, 100, 100), name='OCR_EVENT_SHOP_URPT')
+
 
 
 class EventShopUI(UI):
@@ -90,7 +69,9 @@ class EventShopUI(UI):
 
     @cached_property
     def event_shop_has_urpt(self):
-        if self.image_color_count(SHOP_OCR_BALANCE_SECOND, OCR_EVENT_SHOP_URPT.letter, count=15):
+
+        if self.image_color_count(SHOP_OCR_BALANCE_SECOND, OCR_EVENT_SHOP_URPT.letter, threshold=160, count=30):
+
             logger.info("Event shop has urpt.")
             return True
         else:
@@ -115,19 +96,36 @@ class EventShopUI(UI):
     def event_shop_load_ensure(self):
         ensure_timeout = Timer(3, count=6).start()
         for _ in self.loop():
-            if self.image_color_count(SHOP_OCR_BALANCE, OCR_EVENT_SHOP_PT.letter, count=15):
+
+            if self.image_color_count(SHOP_OCR_BALANCE, OCR_EVENT_SHOP_PT.letter, threshold=160, count=30):
+
                 logger.info("Event shop loaded.")
                 break
             if ensure_timeout.reached():
                 raise GameStuckError('Waiting too long for EventShop to appear.')
         return True
 
+    
+    @cached_property
+    def is_pt_reversed(self):
+        blacklist = [
+            SHOP_EVENT_20240521
+        ]
+        return self.ui_process_check_button(check_button=blacklist)
+
     def event_shop_get_pt(self):
-        pt = OCR_EVENT_SHOP_PT.ocr(self.device.image)
+        if self.is_pt_reversed:
+            pt = OCR_EVENT_SHOP_URPT.ocr(self.device.image)
+        else:
+            pt = OCR_EVENT_SHOP_PT.ocr(self.device.image)
         return pt
 
     def event_shop_get_urpt(self):
-        urpt = OCR_EVENT_SHOP_URPT.ocr(self.device.image)
+        if self.is_pt_reversed:
+            urpt = OCR_EVENT_SHOP_PT.ocr(self.device.image)
+        else:
+            urpt = OCR_EVENT_SHOP_URPT.ocr(self.device.image)
+
         return urpt
 
     def get_oil(self, skip_first_screenshot=True):

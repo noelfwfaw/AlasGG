@@ -66,6 +66,7 @@ class EventShopClerk(EventShopUI):
         return event_shop_items
 
     def event_shop_get_items(self, scroll_pos=None):
+        self.ensure_no_info_bar()
         self.event_shop_items.grids = self._get_event_shop_grid()
         if self.config.SHOP_EXTRACT_TEMPLATE:
             self.event_shop_items.extract_template(self.device.image, './assets/shop/event')
@@ -139,6 +140,11 @@ class EventShopClerk(EventShopUI):
         amount_handled = False
         timer = Timer(2, count=4).start()
         for _ in self.loop():
+
+            if self.handle_popup_confirm("meta_buy_confirm"):
+                timer.reset()
+                continue
+
             if self.appear(AMOUNT_MAX, offset=(20, 20)):
                 if not amount_handled:
                     self.device.click(AMOUNT_MAX)
@@ -154,15 +160,20 @@ class EventShopClerk(EventShopUI):
                     executed = True
                     timer.reset()
                     continue
-            elif self.appear(SHOP_BUY_CONFIRM, offset=(20, 20)):
+
+            elif self.appear(SHOP_BUY_CONFIRM, offset=(20, 40)):
+
                 self.device.click(SHOP_BUY_CONFIRM)
                 executed = True
                 timer.reset()
                 continue
             elif self.appear(BACK_ARROW_WHITE, offset=(20, 20)):
                 if not executed:
-                    self.device.click(item)
-                    timer.reset()
+
+                    if timer.reached():
+                        self.device.click(item)
+                        timer.reset()
+
                     continue
                 elif timer.reached():
                     break
