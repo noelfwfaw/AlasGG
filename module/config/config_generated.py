@@ -516,8 +516,8 @@ class GeneratedConfig:
     OpsiCheckLeveling_DelayAfterFull = False
     # Group `IslandProduction`
     IslandProduction_HardFloorItems = '{}'
-    IslandProduction_ReserveItems = '{}'
     IslandProduction_DailyBufferItems = '{}'
+    IslandProduction_ManualBufferItems = '{}'
     IslandProduction_IdleAccumulatingItems = '{}'
 
     # Group `IslandOrder`
