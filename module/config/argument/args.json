@@ -3493,7 +3493,6 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "raid_20260212",
           "raid_20260827"
         ],
         "option_cn": [
@@ -3506,10 +3505,9 @@
           "raid_20260827"
         ],
         "option_tw": [
-          "raid_20260212"
+          "raid_20260827"
         ],
         "option_bold": [
-          "raid_20260212",
           "raid_20260827"
         ]
       },
@@ -6906,7 +6904,6 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "raid_20260212",
           "raid_20260827"
         ],
         "option_cn": [
@@ -6919,10 +6916,9 @@
           "raid_20260827"
         ],
         "option_tw": [
-          "raid_20260212"
+          "raid_20260827"
         ],
         "option_bold": [
-          "raid_20260212",
           "raid_20260827"
         ]
       },
@@ -10204,6 +10200,10 @@
       "IdleAccumulatingItems": {
         "type": "textarea",
         "value": "{}"
+      },
+      "SkipBufferSurplus": {
+        "type": "checkbox",
+        "value": true
       }
     },
     "Storage": {

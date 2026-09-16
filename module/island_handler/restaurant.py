@@ -6,38 +6,36 @@ from yaml import safe_load
 
 import module.config.server as server
 from module.base.button import ButtonGrid
-from module.base.decorator import cached_property, del_cached_property
+from module.base.decorator import cached_property
 from module.base.timer import Timer
-from module.base.utils import color_similar, color_similarity_2d, load_image
+from module.base.utils import color_mask, color_similar
 from module.config.utils import get_server_next_update
 from module.island.assets import ISLAND_CLICK_SAFE_AREA
 from module.island.data import DIC_ISLAND_ITEM, DIC_ISLAND_RESTAURANT_MENU_TO_RECIPE
 from module.island.utils import (
-    get_stuck_season_order_requirements,
+    get_task_target_items,
+    item_name_with_id,
     load_hard_floor_items,
     load_item_mapping,
-    merge_task_target_stuck_order_items,
     normalize_item_keys,
+    production_place_name_with_id,
 )
 from module.island_handler.assets import *
 from module.island_handler.dock import IslandDock
-from module.island_handler.dock_scanner import CharacterScanner
 from module.island_handler.restaurant_config import (
     RESTAURANT_IDS,
     WAITRESS_ANY,
     WAITRESS_NONE,
     get_config_key,
+    get_menu_reserve_items,
     get_restaurant_capacity,
     get_restaurant_config,
     get_selected_named_waitresses,
-    get_waitress_effect,
     get_waitress_slots,
 )
 from module.logger import logger
 from module.ocr.ocr import Digit
 from module.statistics.item import Item, ItemGrid
-from module.statistics.utils import load_folder
-
 
 RESTAURANT_SWIPE_AREA = (583, 208, 1023, 400)
 ISLAND_RESTAURANT_ITEM_ORDER_PRICE = {
@@ -50,6 +48,16 @@ ISLAND_RESTAURANT_ITEM_ORDER_PRICE = {
 }
 
 
+def restaurant_item_log_text(item, sell_amount=None):
+    name = item_name_with_id(item.id) if item.id and item.id in DIC_ISLAND_ITEM else item.name
+    detail = f'stock {item.amount}'
+    if sell_amount is not None:
+        detail += f', sell {sell_amount}'
+    if getattr(item, 'tag', None) == 'bonus':
+        detail += ', event bonus'
+    return f'{name} ({detail})'
+
+
 class WaitressOccupied(Exception):
     pass
 
@@ -58,9 +66,10 @@ class RestaurantItem(Item):
     IMAGE_SHAPE = (83, 87)
 
     def predict_valid(self):
-        mask = color_similarity_2d(self.image, (207, 209, 211))
-        cv2.inRange(mask, 0, 201, dst=mask)
-        sum_ = np.count_nonzero(mask)
+        # Mask pixels that are not similar to the background
+        mask = color_mask(self.image, (207, 209, 211), threshold=50)
+        cv2.bitwise_not(mask, dst=mask)
+        sum_ = cv2.countNonZero(mask)
         return sum_ > 400
 
 
@@ -105,9 +114,9 @@ class RestaurantItemGrid(ItemGrid):
         grids = self.grids
         if len(items):
             min_row = grids[0, 0].area[1]
-            row = [str(item) for item in items if item.button[1] == min_row]
+            row = [restaurant_item_log_text(item) for item in items if item.button[1] == min_row]
             logger.info(f'Item row 1: {row}')
-            row = [str(item) for item in items if item.button[1] != min_row]
+            row = [restaurant_item_log_text(item) for item in items if item.button[1] != min_row]
             logger.info(f'Item row 2: {row}')
             return items
 
@@ -266,22 +275,46 @@ class IslandRestaurant(IslandDock):
             if item.id in menu
             # Sell one full waitress-capacity tranche while preserving manual
             # hard floors, task targets, and remaining season-order
-            # requirements. Reserves and daily buffers are soft and may be
-            # consumed by restaurants.
+            # requirements. Configured menu sales may consume their soft
+            # restaurant reserve and daily buffer.
             and has_sellable_capacity(item)
         ]
-        surplus_items = [
-            item for item in items
-            if item.id not in menu
-            and has_sellable_capacity(item)
-        ]
-        sellable_items = menu_items + surplus_items
         quantity = self.restaurant_quantity[self.working_restaurant_id]
-        items = sorted(sellable_items, key=total_revenue_estimate, reverse=True)
-        if len(items) < quantity:
-            quantity = len(items)
-        plan = items[:quantity]
-        logger.info(f'Sell plan: {[str(item) for item in plan]}')
+        plan = sorted(menu_items, key=total_revenue_estimate, reverse=True)[:quantity]
+        remaining = quantity - len(plan)
+        if remaining:
+            # Fill only vacant shelves from stock above the complete operating floor.
+            daily_buffer_items = normalize_item_keys(load_item_mapping(
+                self.config.cross_get("IslandProduction.IslandProduction.DailyBufferItems", "{}"),
+                config_name='DailyBufferItems',
+            ))
+            manual_buffer_items = normalize_item_keys(load_item_mapping(
+                self.config.cross_get("IslandProduction.IslandProduction.ManualBufferItems", "{}"),
+                config_name='ManualBufferItems',
+            ))
+            menu_reserve_items = get_menu_reserve_items(self.config)
+            def has_surplus_capacity(item):
+                operation_floor = (
+                    protected_items.get(item.id, 0)
+                    + menu_reserve_items.get(item.id, 0)
+                    + max(daily_buffer_items.get(item.id, 0), manual_buffer_items.get(item.id, 0), 0)
+                )
+                return item.amount >= capacity + operation_floor
+            surplus_items = [
+                item for item in items
+                if item.id not in menu and has_surplus_capacity(item)
+            ]
+            plan.extend(sorted(surplus_items, key=total_revenue_estimate, reverse=True)[:remaining])
+        restaurant = production_place_name_with_id(self.working_restaurant_id)
+        menu_summary = ', '.join(
+            f'{item_name_with_id(item_id)} x{amount}'
+            for item_id, amount in sorted(menu.items())
+        ) or '-'
+        plan_summary = ', '.join(
+            restaurant_item_log_text(item, sell_amount=capacity) for item in plan
+        ) or '-'
+        logger.info(f'Restaurant configured menu for {restaurant}: {menu_summary}')
+        logger.info(f'Restaurant sell plan for {restaurant}: {plan_summary}')
         return plan
 
     @cached_property
@@ -289,17 +322,7 @@ class IslandRestaurant(IslandDock):
         hard_floor_items = normalize_item_keys(load_hard_floor_items(
             self.config.cross_get("IslandProduction.IslandProduction.HardFloorItems", "")
         ))
-        stuck_season_order_id = self.config.cross_get(
-            "IslandOrder.IslandOrder.StuckSeasonOrderId", 0
-        )
-        task_target_items = load_item_mapping(
-            self.config.cross_get("IslandSeasonTask.IslandSeasonTask.TaskTarget", "{}"),
-            config_name='TaskTarget',
-        )
-        protected_target_items = merge_task_target_stuck_order_items(
-            task_target_items,
-            get_stuck_season_order_requirements(stuck_season_order_id),
-        )
+        protected_target_items = get_task_target_items(self.config)
         item_ids = set(hard_floor_items) | set(protected_target_items)
         return {
             item_id: max(hard_floor_items.get(item_id, 0), 0)
@@ -358,11 +381,12 @@ class IslandRestaurant(IslandDock):
             if self.is_in_island_dock():
                 break
         success = True
+        restaurant = production_place_name_with_id(self.working_restaurant_id)
         for waitress in named_waitresses:
             if waitress in unavailable_waitress_list:
                 logger.warning(
                     f"Waitress {waitress} is already assigned to another restaurant, "
-                    f"skip it for restaurant {self.working_restaurant_id}"
+                    f"skip it for restaurant {restaurant}"
                 )
                 unavailable_waitress_list.remove(waitress)
                 continue
@@ -377,12 +401,12 @@ class IslandRestaurant(IslandDock):
                 if time_until_update >= timedelta(hours=8):
                     logger.warning(
                         f"Waitress {waitress} not available, delaying restaurant "
-                        f"{self.working_restaurant_id} for 8 hours"
+                        f"{restaurant} for 8 hours"
                     )
                     self.ui_back(check_button=self.is_in_island_restaurant)
                     raise WaitressOccupied(
                         f"Waitress {waitress} is occupied, delaying restaurant "
-                        f"{self.working_restaurant_id} for 8 hours"
+                        f"{restaurant} for 8 hours"
                     )
 
             self.ensure_dock_page_at_top()
@@ -449,6 +473,10 @@ class IslandRestaurant(IslandDock):
                         self.device.click(item._button)
                 if not plan_to_click:
                     break
+        if plan:
+            restaurant = production_place_name_with_id(self.working_restaurant_id)
+            remaining = [restaurant_item_log_text(item) for item in plan]
+            logger.warning(f'Failed to select dishes for {restaurant}; remaining: {remaining}')
         return not plan
 
     def restaurant_start(self):
